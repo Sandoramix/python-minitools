@@ -1,51 +1,54 @@
 #! WIP
-def first_closest(num):
-    res=1
-    i=0
-    while True:
-        if res-2>num:
-            return (i,res)
-        res=res*2
-        i+=1
+def bitsNeededPerHosts(hosts=2):
+	count=0
+	while True:
+		hosts_per_count=2**count-2
+		if (hosts_per_count>=hosts):
+			return (count,hosts_per_count)
+		count+=1
+
+def intToBinary(number:int):
+	return str(bin(number)[2:])
 
 
-def int_bin(n):
-    return str(bin(n))[2:]
+def binaryToInt(binary:str):
+	return int(binary,2)
 
-def bin_int(n):
-    return int(n,2)
+def decimalIpToBinary(ip_array:list[int]):
+	# result:list[str]=[]
+	result=''
+	for part in ip_array:
+			binary=intToBinary(part)
+			# result.append(("0"*(8-len(binary)))+binary)
+			result+=("0"*(8-len(binary)))+binary
+	return result
 
-def dec_array_to_bin(ip_array):
-    out=''
-    for i in ip_array:
-        binary=int_bin(i)
-        out+="0"*(8-len(binary))+binary
-    return out
+def binaryIpToDecimal(ip:str):
+	if len(ip)!=32:
+		return[]
+	return [binaryToInt(ip[i:i+8]) for i in range(0,32,8)]
+	# return [binaryToInt]
 
 
-def get_ip_range(ip,sm,host_bits):
-    ip_bits=dec_array_to_bin(ip)
-    last_ip_bits=int_bin(bin_int(ip_bits)+bin_int("0"*(32-host_bits) + "1"*host_bits))
+def get_ip_range(ip,sm,hostBits):
+	binaryIp=decimalIpToBinary(ip)
+	last_ip_bits=intToBinary(binaryToInt(binaryIp)+binaryToInt("0"*(32-hostBits) + "1"*hostBits))
+	print(binaryIp)
+	broadcast=binaryIpToDecimal(last_ip_bits)
+	first_ip=ip[:3]+[ip[3]+1]
+	last_ip=broadcast[:3]+[broadcast[3]-1]
+	print(f"\tSTART IP: {forgeIp(ip)} /{32-hostBits}")
+	print(f"\t\tFIRST IP: {forgeIp(first_ip)}")
+	print(f"\t\tLAST IP: {forgeIp(last_ip)}")
+	print(f"\t\tBROADCAST IP: {forgeIp(broadcast)}")
+	print(f"\t\tSM : {forgeIp(sm)}")
 
-    broadcast=bin_str_to_dec_array(last_ip_bits)
-    first_ip=ip[:3]+[ip[3]+1]
-    last_ip=broadcast[:3]+[broadcast[3]-1]
-    print(f"\tSTART IP: {dec_array_to_bin_str(ip)} /{32-host_bits}")
-    print(f"\t\tFIRST IP: {dec_array_to_bin_str(first_ip)}")
-    print(f"\t\tLAST IP: {dec_array_to_bin_str(last_ip)}")
-    print(f"\t\tBROADCAST IP: {dec_array_to_bin_str(broadcast)}")
-    print(f"\t\tSM : {dec_array_to_bin_str(sm)}")
+	nextip=binaryIpToDecimal(intToBinary(binaryToInt(decimalIpToBinary(broadcast))+1))
+	return nextip
 
-    nextip=bin_str_to_dec_array(int_bin(bin_int(dec_array_to_bin(broadcast))+1))
-    return nextip
 
-def bin_str_to_dec_array(ip):
-    if len(ip)!=32:
-        return[]
-    return [bin_int(ip[i:i+8]) for i in range(0,32,8)]
-
-def dec_array_to_bin_str(ip_array):
-    return (".".join(str(i) for i in ip_array))
+def forgeIp(ip_array: list[int|str]):
+  return (".".join(str(i) for i in ip_array))
 
 
 
@@ -53,7 +56,8 @@ def dec_array_to_bin_str(ip_array):
 
 
 if __name__=="__main__":
-	raw=input(f"MAIN NETWORK [IP /SM] [example: 192.168.0.0 /24] : ")
+	# raw=input(f"INITIAL NETWORK [IP /SM] [example: 192.168.0.0 /24] : ")
+	raw='192.168.1.0/24'
 	splitted=raw.split("/")
 	if len( splitted)!=2:
 			exit("wrong syntax")
@@ -75,13 +79,13 @@ if __name__=="__main__":
 	for i in range(n_host):
 			print(f"{i+1}: {hosts[i]} hosts:")
 			host=hosts[i]
-			query=first_closest(host)
+			query=bitsNeededPerHosts(host)
 			print(query)
 			host_bits=query[0]
 			net_bits=32-host_bits
 
 			subnet_mask_bits="1"*net_bits + "0"*host_bits
-			subnet_mask_decimal=bin_str_to_dec_array(subnet_mask_bits)
+			subnet_mask_decimal=binaryIpToDecimal(subnet_mask_bits)
 
 			start_ip=[next_ip[i]&subnet_mask_decimal[i] for i in range(4)]
 
