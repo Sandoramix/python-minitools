@@ -4,7 +4,11 @@ import re
 
 class CustomException(Exception):
   """Custom Exception"""
-  
+
+
+def getSubnetMask(host_bits:int):
+  return "1"*(32 - host_bits) + "0"*host_bits
+
 def isValidIp(ip:str)-> bool:
     valid_regex=re.compile(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$")
     return valid_regex.match(ip)!=None
@@ -34,7 +38,6 @@ def decimalIpToBinary(ip:str|list[int]):
   for part in ip_array:
     binary=intToBinary(part)
     result.append(("0"*(8-len(binary)))+binary)
-    # result+=("0"*(8-len(binary)))+binary
   return result
 
 def binaryIpToDecimal(ip:str|list[str]):
@@ -77,10 +80,10 @@ def splitIp(ip:str):
 
 if __name__=="__main__":
 
-  raw_input=input(f"INITIAL IP [e.g. 192.168.1.0] : ").strip() 
-  
+  initialIp=input(f"INITIAL IP [e.g. 192.168.1.0] : ").strip()
+
   try:
-    initialIpList=splitIp(raw_input)
+    initialIpList=splitIp(initialIp)
   except CustomException:
     print('Invalid IP')
     exit(1)
@@ -113,7 +116,7 @@ if __name__=="__main__":
     host_bits=bitsNeeded[0]
     net_bits=32-host_bits
 
-    subnetMaskBinary=("1"*net_bits) + ("0"*host_bits)
+    subnetMaskBinary=getSubnetMask(host_bits)
     subnetMaskDecimalList=binaryIpToDecimal(subnetMaskBinary)
     
     start_ip=[nextIpList[i]&subnetMaskDecimalList[i] for i in range(4)]
