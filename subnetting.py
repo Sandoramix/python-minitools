@@ -67,6 +67,7 @@ def get_ip_range(ip,sm,hostBits):
 
 def forgeIp(ip_array: list[int|str]):
   return (".".join(str(i) for i in ip_array))
+
 def splitIp(ip:str):
   if not isValidIp(ip): raise CustomException("Invalid IP")
   return [int(i) for i in ip.split('.')]
@@ -75,40 +76,46 @@ def splitIp(ip:str):
 
 
 if __name__=="__main__":
-  raw=input(f"INITIAL IP [e.g. 192.168.1.0] : ")
-  # raw:str="192.168.1.0"
-  splitted=raw.split("/")
 
-  initial_ip=splitted[0].strip() 
-  if (not isValidIp(initial_ip)):
+  raw_input=input(f"INITIAL IP [e.g. 192.168.1.0] : ").strip() 
+  
+  try:
+    initialIpList=splitIp(raw_input)
+  except CustomException:
     print('Invalid IP')
     exit(1)
-  initial_ip=splitIp(initial_ip)
+
+
+  try:
+    totalSubnets=int(input("N of subnets: "))
+  except:
+    print('Invalid NUMBER')
+    exit(1)
   
-
   hosts=[]
-  totalSubnets=int(input("N of subnets: "))
   for i in range(totalSubnets):
+    try:
       hosts.append(int(input(f"[{i+1}]Subnet, hosts: ")))
+    except:
+      i-=1
+      print('Invalid number')
 
-  next_ip=initial_ip
+
+  nextIpList=initialIpList
   hosts=sorted(hosts,reverse=True)
 
-  for i,host in enumerate(hosts):
-    try:
-      host=int(host)
-      print(f"{i+1}: {host} hosts:")
-    except:
-      print(f"{i+1}: Unknown hosts:")
-      continue
+  for index,host in enumerate(hosts):
+    print(f"{index+1}: {host} hosts:")
+   
     
     bitsNeeded=bitsNeededPerHosts(host)
     
     host_bits=bitsNeeded[0]
     net_bits=32-host_bits
 
-    subnet_mask_bits=("1"*net_bits) + ("0"*host_bits)
-    subnet_mask_decimal=binaryIpToDecimal(subnet_mask_bits)
-    start_ip=[next_ip[i]&subnet_mask_decimal[i] for i in range(4)]
+    subnetMaskBinary=("1"*net_bits) + ("0"*host_bits)
+    subnetMaskDecimalList=binaryIpToDecimal(subnetMaskBinary)
+    
+    start_ip=[nextIpList[i]&subnetMaskDecimalList[i] for i in range(4)]
 
-    next_ip=get_ip_range(start_ip,subnet_mask_decimal,host_bits)
+    nextIpList=get_ip_range(start_ip,subnetMaskDecimalList,host_bits)
